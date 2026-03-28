@@ -3,7 +3,7 @@
 # ⚡ SHE-AI — Self-Healing Enterprise AI System
 
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com/?lines=Autonomous+AI+Workflow+System;Detects+%2B+Fixes+Failures;Multi-Agent+Architecture;Hackathon+Winning+Project&center=true&width=500&height=45">
+  <img src="https://readme-typing-svg.herokuapp.com/?lines=Autonomous+AI+Workflow+System;Detects+%2B+Fixes+Failures;Multi-Agent+Architecture&center=true&width=500&height=45">
 </p>
 
 ---
