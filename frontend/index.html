@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SHE-AI Dashboard</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #020617 0%, #0f172a 22%, #1e1b4b 45%, #0c4a6e 55%, #0f172a 78%, #020617 100%);
+      background-size: 400% 400%;
+      animation: gradientFlow 20s ease infinite;
+      color: white;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientFlow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .glass:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+    }
+
+    .glass-static:hover {
+      transform: none;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-body {
+      flex: 1;
+      min-height: 280px;
+      overflow-y: auto;
+    }
+
+    .status-green { color: #22c55e; }
+    .status-red { color: #ef4444; }
+    .status-yellow { color: #facc15; }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease-in-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .timeline-step {
+      border-left: 3px solid rgba(34, 211, 238, 0.45);
+      padding-left: 12px;
+      margin-bottom: 10px;
+      opacity: 0;
+      animation: fadeIn 0.45s ease-out forwards;
+    }
+
+    .btn-trigger {
+      transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    }
+    .btn-trigger:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+      filter: brightness(1.08);
+    }
+    .btn-trigger:active {
+      transform: scale(0.98);
+    }
+
+    #bgCanvas {
+      pointer-events: none;
+    }
+
+    .logo-glow {
+      filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.45));
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+      max-height: 40vh;
+    }
+
+  </style>
+</head>
+
+<body class="p-4 sm:p-8">
+
+<canvas id="bgCanvas" class="fixed top-0 left-0 w-full h-full z-0"></canvas>
+
+<div class="relative z-10 mx-auto max-w-7xl">
+
+  <!-- Brand header -->
+  <header class="flex flex-col items-center justify-center gap-4 mb-8 text-center">
+    <div class="flex items-center gap-4">
+      <svg class="logo-glow h-14 w-14 shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#22d3ee"/>
+            <stop offset="1" stop-color="#a855f7"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 4L56 18v28L32 60 8 46V18L32 4z" stroke="url(#lg)" stroke-width="2" fill="rgba(15,23,42,0.6)"/>
+        <path d="M32 20v24M22 32h20" stroke="url(#lg)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="text-left">
+        <p class="text-xs uppercase tracking-[0.2em] text-cyan-400/80">Self-Healing Enterprise</p>
+        <h1 class="text-4xl sm:text-5xl font-bold leading-tight"
+            style="background: linear-gradient(90deg, #22d3ee, #3b82f6, #a855f7);
+                   -webkit-background-clip: text;
+                   background-clip: text;
+                   color: transparent;
+                   -webkit-text-fill-color: transparent;">
+          SHE-AI Control Center
+        </h1>
+      </div>
+    </div>
+  </header>
+
+  <div id="status" class="text-center mb-5 text-lg sm:text-xl status-green max-w-3xl mx-auto px-2">
+    Ready - system healthy
+  </div>
+
+  <div class="glass glass-static mt-2 mb-6 w-full grid grid-cols-1 sm:grid-cols-3 gap-4 text-center py-5 px-4">
+    <div>
+      <p class="text-sm text-slate-400">Issues detected</p>
+      <h2 id="issuesCount" class="text-3xl font-bold text-amber-300 font-mono mt-1">0</h2>
+    </div>
+    <div>
+      <p class="text-sm text-slate-400">Resolved</p>
+      <h2 id="resolvedCount" class="text-3xl font-bold text-emerald-300 font-mono mt-1">0</h2>
+    </div>
+    <div>
+      <p class="text-sm text-slate-400">INR saved (session)</p>
+      <h2 id="moneySaved" class="text-3xl font-bold text-cyan-300 font-mono mt-1">0</h2>
+    </div>
+  </div>
+
+  <div id="timeline" class="glass glass-static mb-6 w-full">
+    <h2 class="text-lg font-semibold mb-3 text-cyan-200">Agent workflow</h2>
+    <div id="steps" class="text-sm text-slate-300"></div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-stretch">
+
+    <div class="glass glass-static md:col-span-1">
+      <h2 class="text-xl font-semibold mb-4 shrink-0">Control panel</h2>
+      <div class="flex flex-col gap-2 flex-1">
+        <button type="button" onclick="run('payment')" class="btn-trigger w-full bg-red-600 hover:bg-red-500 p-3 rounded-lg text-white font-medium">
+          Payment failure
+        </button>
+        <button type="button" onclick="run('inventory')" class="btn-trigger w-full bg-amber-500 hover:bg-amber-400 p-3 rounded-lg text-slate-900 font-medium">
+          Inventory low
+        </button>
+        <button type="button" onclick="run('delivery')" class="btn-trigger w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-lg text-white font-medium">
+          Delivery delay
+        </button>
+        <button type="button" onclick="run('all')" class="btn-trigger w-full bg-purple-600 hover:bg-purple-500 p-3 rounded-lg text-white font-medium">
+          Multiple failures
+        </button>
+        <button type="button" onclick="predict()" class="btn-trigger w-full bg-cyan-600 hover:bg-cyan-500 p-3 rounded-lg text-white font-medium mt-1">
+          Predict next failure
+        </button>
+        <button type="button" onclick="autoDemo()" class="btn-trigger w-full bg-green-600 hover:bg-green-500 p-3 rounded-lg text-white font-medium">
+          Auto demo
+        </button>
+      </div>
+      <p id="learning" class="text-center mt-4 text-sm text-purple-300">
+        AI learning accuracy: 78%
+      </p>
+    </div>
+
+    <div class="glass md:col-span-2">
+      <h2 class="text-xl font-semibold mb-4 shrink-0">AI decisions</h2>
+      <div id="decisions" class="panel-body text-slate-300"></div>
+    </div>
+
+    <div class="glass md:col-span-1">
+      <h2 class="text-xl font-semibold mb-4 shrink-0">Audit log</h2>
+      <div id="audit" class="text-xs overflow-auto max-h-64 text-left font-mono text-slate-300 whitespace-pre-wrap break-words"></div>
+    </div>
+
+  </div>
+
+  <div class="glass glass-static mt-6 w-full text-center py-6">
+    <h2 class="text-xl font-semibold mb-2">Business impact</h2>
+    <p id="impact" class="text-lg text-cyan-200 font-medium">Estimated savings: INR 0</p>
+  </div>
+
+  <section class="glass glass-static mt-8 w-full" aria-label="Analytics dashboard">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+      <h2 class="text-xl font-semibold text-cyan-200">Analytics dashboard</h2>
+      <button type="button" onclick="clearAnalytics()" class="text-sm px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-white/5 transition-colors">
+        Clear history
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+      <div class="stat-card">
+        <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Total runs</p>
+        <p id="stat-total-runs" class="text-2xl sm:text-3xl font-bold text-white font-mono">0</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Issues handled</p>
+        <p id="stat-total-issues" class="text-2xl sm:text-3xl font-bold text-amber-300 font-mono">0</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Cumulative savings</p>
+        <p id="stat-total-savings" class="text-xl sm:text-2xl font-bold text-emerald-300 font-mono">INR 0</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Avg decisions / run</p>
+        <p id="stat-avg-decisions" class="text-2xl sm:text-3xl font-bold text-fuchsia-300 font-mono">0</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
+        <h3 class="text-sm font-medium text-slate-400 mb-3">Runs by scenario</h3>
+        <div class="chart-wrap">
+          <canvas id="chartScenarios" aria-label="Scenario chart"></canvas>
+        </div>
+      </div>
+      <div>
+        <h3 class="text-sm font-medium text-slate-400 mb-3">Savings per run (last 15)</h3>
+        <div class="chart-wrap">
+          <canvas id="chartSavings" aria-label="Savings trend"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="app.js" charset="utf-8"></script>
+
+<script>
+(function () {
+  const canvas = document.getElementById("bgCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  const particles = [];
+  for (let i = 0; i < 60; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2,
+      dx: Math.random() - 0.5,
+      dy: Math.random() - 0.5
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach((p) => {
+      p.x += p.dx;
+      p.y += p.dy;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = "#22d3ee";
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+
+</body>
+</html>
