@@ -19,7 +19,6 @@
 
 > 🚀 “We don’t just detect problems — we solve them.”
 
----
 
 ## 🎯 Problem
 
@@ -28,7 +27,6 @@ Modern enterprise systems:
 - ❌ Require **manual intervention**
 - ❌ Cause delays, losses, and inefficiency  
 
----
 
 ## 💡 Solution
 
@@ -40,20 +38,8 @@ SHE-AI introduces a **multi-agent autonomous system**:
 | 🧠 Decision Agent | Chooses best fix |
 | ⚙️ Action Agent | Executes solution |
 | 📜 Audit Agent | Logs reasoning |
+  
 
----
-
-## ⚡ Features
-
-✨ Futuristic Glass UI  
-🤖 Multi-Agent AI Architecture  
-📊 Real-time Analytics (₹ impact)  
-🔮 Failure Prediction (AI simulation)  
-🎬 Auto Demo Mode  
-📈 AI Learning Simulation  
-🧠 Decision + Reasoning display  
-
----
 
 ## 🎥 Demo Flow
 
